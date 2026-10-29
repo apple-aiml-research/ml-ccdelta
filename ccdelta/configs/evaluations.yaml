@@ -1,0 +1,208 @@
+# For licensing see accompanying LICENSE file.
+# Copyright (C) 2025 Apple Inc. All Rights Reserved.
+
+# Shared evaluation configurations for MMLU and model perplexity
+# This file can be included in text generation configs to avoid duplication
+eval_seq_len: 500
+
+use_chat_template_for_generation: true
+use_chat_template_for_mmlu: false
+
+# Defense settings
+use_defense: false
+defense_payload_last: true
+
+text_generation:
+  # Generation settings
+  prompt: ${task_params.eval_dataset.file_path}
+  prompt_column: ${task_params.eval_dataset.source_column}
+  new_seq_len: ${eval_seq_len}
+  num_sentences: null  # Number of sentences to process (null = all)
+  use_chat_template: ${use_chat_template_for_generation}
+  
+  # Sampling configuration
+  sampling_kwargs:
+    do_sample: false
+    
+  batch_size: ${generate_batch_size}
+  device: ${device}
+  seed: ${seed}
+  
+  # Paths
+  cache_dir: ${cache_dir}
+  results_dir: ${results_dir}
+  
+  intervention_params: ${intervention_params}
+  model_params: ${model}
+
+  fast: ${fast}
+  
+  # Optional experiment identifier for tracking experimental parameters
+  experiment_id: "default_experiment_id"
+
+mmlu:
+  batch_size: ${eval_batch_size}
+  device: ${device}
+  dtype: ${model.dtype}
+  data_dir: ${data_dir}
+  cache_dir: ${cache_dir}
+  model_path: ${model.model_path}
+  module_names: ${model.module_names}
+  # The eleuther eval harness tasks to use
+  tasks: [mmlu]
+  # Few-shot configuration
+  num_fewshot: 5
+  # Number of data points to use. Set to null for full testing and meaningful results.
+  limit: null
+  # For statistical significance estimation
+  bootstrap_iters: 100000
+  # Random seed
+  rs: ${seed}
+  # Numpy random seed
+  nrs: ${seed}
+  # Torch random seed
+  trs: ${seed}
+  # Where results are saved
+  results_dir: "${results_dir}"
+  # If true, run script in fast mode (small batches, small data, not useful for true results)
+  fast: ${fast}
+  intervention_params: ${intervention_params}
+  # see configs/model
+  model_params: ${model}
+  seq_len: 5000
+  use_chat_template: ${use_chat_template_for_mmlu}
+  use_defense: ${use_defense}
+  defense_payload_last: ${defense_payload_last}
+  prepare_mmlu_local: true
+  max_workers: 16
+
+ifeval:
+  batch_size: ${eval_batch_size}
+  device: ${device}
+  dtype: ${model.dtype}
+  data_dir: ${data_dir}
+  cache_dir: ${cache_dir}
+  model_path: ${model.model_path}
+  module_names: ${model.module_names}
+  tasks: [ifeval]
+  num_fewshot: 0
+  limit: null
+  bootstrap_iters: 100000
+  rs: ${seed}
+  nrs: ${seed}
+  trs: ${seed}
+  results_dir: "${results_dir}"
+  fast: ${fast}
+  intervention_params: ${intervention_params}
+  # see configs/model
+  model_params: ${model}
+  seq_len: 5000
+  use_chat_template: ${use_chat_template_for_generation}
+  use_defense: ${use_defense}
+  defense_payload_last: ${defense_payload_last}
+
+model_perplexity:
+  # The data directory
+  data_dir: ${data_dir}
+  results_dir: "${results_dir}"
+  # Device for inference (cuda, cpu, mps)
+  device: ${device}
+  # Data type for model
+  dtype: ${model.dtype}
+  # Path or URL to the model weights
+  perplexity_model_path: "mistralai/Mistral-7B-v0.1"
+  # Path to the CSV containing evaluation data
+  data_path: "${results_dir}/generate_with_hooks/text_generation.parquet"
+  # Column(s) containing sentences in the --data-path CSV. If 2 passed, the second one is the prompt column
+  column_sentences: [["steered_text"], ["steered_text", "prompt"]]
+  # If true, run script in fast mode (small batches, small data, not useful for true results)
+  fast: ${fast}
+  seed: ${seed}
+  seq_len: ${eval_seq_len}
+  batch_size: ${generate_batch_size}
+  intervention_params: ${intervention_params}
+
+
+strongreject_finetuned:
+  data_path: "${results_dir}/generate_with_hooks/text_generation.parquet"
+  evaluator: "fine_tuned"
+  prompt_column: "prompt"
+  response_column: "steered_text"
+  device: ${device}
+  batch_size: ${eval_batch_size}
+  results_dir: ${results_dir}
+
+
+strongreject_rubric:
+  data_path: "${results_dir}/generate_with_hooks/text_generation.parquet"
+  evaluator: "rubric"
+  prompt_column: "prompt"
+  response_column: "steered_text"
+  device: ${device}
+  batch_size: ${eval_batch_size}
+  results_dir: ${results_dir}
+
+
+fluency:
+  data_path: "${results_dir}/generate_with_hooks/text_generation.parquet"
+  response_column: "steered_text"
+  num_sentences: null
+  results_dir: ${results_dir}
+  max_workers: 16
+
+orbench:
+  data_path: "${results_dir}/generate_with_hooks/text_generation.parquet"
+  prompt_column: "prompt"
+  response_column: "steered_text"
+  judge_model: "gpt-4-turbo-2024-04-09"
+  max_workers: 16
+  num_sentences: null
+  results_dir: ${results_dir}
+
+pair:
+  data_path:
+    - "data/forbidden_prompts/0.5/advbench_test.parquet"
+    - "data/forbidden_prompts/0.5/strongreject_test.parquet"
+  prompt_column: "forbidden_prompt"
+  generate_nojailbreak: true  # Also generate jailbreak="none" rows for downstream metrics
+  target_str: "Sure, I'm happy to help"
+  attack_models: ["openai/gpt-4o-mini", "openai/gpt-3.5-turbo"]
+  judge_models: null  # uses strongreject default
+  evaluator: "pair"   #choices: strongreject_rubric, strongreject_finetuned, pair
+  max_iter: 20
+  max_conversation_length: 3
+  max_tokens: 200
+  num_sentences: null  # limit for testing
+  device: ${device}
+  dtype: ${model.dtype}
+  cache_dir: ${cache_dir}
+  results_dir: ${results_dir}
+  new_seq_len: ${eval_seq_len}
+  fast: ${fast}
+  intervention_params: ${intervention_params}
+  model_params: ${model}
+
+pair_prompt_defense:
+  data_path:
+    - "data/prompt_defense/0.5/strongreject_test_none.prompt_defense.parquet"
+    - "data/prompt_defense/0.5/advbench_test_none.prompt_defense.parquet"  
+  prompt_column: "forbidden_prompt"
+  generate_nojailbreak: true  # Also generate jailbreak="none" rows for downstream metrics
+  target_str: "Sure, I'm happy to help"
+  attack_models: ["openai/gpt-4o-mini", "openai/gpt-3.5-turbo"]
+  judge_models: null  # uses strongreject default
+  evaluator: "pair"   #choices: strongreject_rubric, strongreject_finetuned, pair
+  max_iter: 20
+  max_conversation_length: 3
+  max_tokens: 200
+  num_sentences: null  # limit for testing
+  device: ${device}
+  dtype: ${model.dtype}
+  cache_dir: ${cache_dir}
+  results_dir: ${results_dir}
+  new_seq_len: ${eval_seq_len}
+  fast: ${fast}
+  intervention_params: ${intervention_params}
+  model_params: ${model}
+
+

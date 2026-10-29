@@ -1,0 +1,139 @@
+# SAE Reconstruction Error Analysis Pipeline
+# Configuration for collecting SAE reconstruction error statistics on paired data
+# This is a data collection only config - no intervention learning or generation
+
+defaults:
+  # Load model configuration (must include SAE config)
+  - model: gemma-2-2b-it-sae
+  # Load task/data configuration
+  - task_params: jailbreak
+  # MUST come at end
+  - _self_
+
+task_params:
+  filter_key: wrapper
+
+# Hydra settings
+hydra:
+  job:
+    chdir: false
+
+device: 'cuda'
+seed: 42
+fast: false
+batch_size: ${model.default_batch_size}
+learning_batch_size: ${model.learning_batch_size}
+generate_batch_size: ${model.generate_batch_size}
+eval_batch_size: ${model.eval_batch_size}
+
+
+#################################
+# Pipeline Control
+#################################
+# Data and model loading paths
+data_dir: ${oc.env:OUTPUT_DIR,./results}/data
+cache_dir: ${oc.env:OUTPUT_DIR,./results}/cache
+results_dir: ${oc.env:OUTPUT_DIR,./results}/results
+
+# Only collect responses - no intervention learning or evaluation
+compute_responses: true
+compute_interventions: false
+evaluation: []  # Skip all evaluations
+
+#################################
+# Response Collection Hook Configuration
+#################################
+# This hook uses SAEReconstructionErrorHook to compute error statistics
+response_collection_hook:
+  name: "paired_sae_error_analysis"  # Uses SAEReconstructionErrorHook as inner hook
+  pooling_op: all
+  hook_params:
+    model_config: ${model}  # Automatically resolves SAE config per module
+    device: ${device}
+    dtype: ${model.dtype}
+    return_sparse: true  # Store as sparse tensors (much smaller files)
+    collect_error_stats: true  # Opt-in to error stats collection
+    # Special token filtering: false = filter BOS/EOS/PAD from stats (matches steering)
+    # Set to true to include special tokens in statistics
+    skip_special_token_filtering: false
+
+#################################
+# Response Generation Settings
+#################################
+responses:
+  # Data handling
+  batch_size: ${learning_batch_size}
+  shuffle: true
+  max_batches: null
+  save_fields: []
+  use_chat_template: true
+
+  # System settings
+  device: "${device}"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: true
+
+  # Paths and organization
+  data_dir: ${data_dir}
+  cache_dir: ${cache_dir}
+  tag: "error_analysis_responses"
+
+  # Task-specific configuration for paired data
+  task_params: ${task_params}
+
+  # Configuration references - response collection specific
+  intervention_params: ${response_collection_hook}
+
+  model_params: ${model}
+
+#################################
+# Intervention stub (required by pipeline but not used)
+#################################
+intervention_params:
+  name: sae_feature_space
+  experiment_id: error_analysis
+  learn_intervention: false
+  incremental: "incr"
+  pooling_op: all
+  state_path: null
+  hook_params:
+    model_config: ${model}
+    error_coefficient: 1.0
+    normalization_mode: null
+    intervention_position: all
+    device: ${device}
+    dtype: ${model.dtype}
+    steering_multiplier: 1.0
+    skip_special_token_filtering: false
+    steer_n_new_tokens: 0
+    decay_schedule: "none"
+    use_chat_template_for_responses: true
+    feature_diffing_method: "source_conditioned"
+    target_metric: "activation_avg"
+    threshold_percentile: 10
+    min_observations_percent: 20.0
+    min_observations_absolute: 5
+    max_observations_percent: 100
+    p_value_threshold: 0.01
+    num_features: 50
+    ranking_method: "effect_size"
+    feature_selection_method: "statistical"
+    balance_pos_and_neg: false
+
+interventions:
+  batch_size: ${learning_batch_size}
+  max_batches: null
+  shuffle: true
+  load_fields: []
+  device: "cpu"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: false
+  cache_dir: ${cache_dir}
+  tag: "interventions"
+  task_params: ${responses.task_params}
+  intervention_params: ${intervention_params}
+  model_params: ${model}

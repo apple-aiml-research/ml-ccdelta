@@ -1,0 +1,20 @@
+model_task: "text-generation"
+dataset: "tabular-paired"
+src_subsets: []
+dst_subsets: []
+default_evaluation: []
+train_split_pct: 0.5
+filters:
+  no_op: "index==index"
+filter_key: no_op
+learning_dataset:
+  file_path: data/tiny/giraffes_prompts.json
+  source_column: prompt
+  target_column: destination
+  query: ${..filters.${..filter_key}}
+  # query: null
+eval_dataset:
+  file_path: data/tiny/giraffes_prompts.json
+  source_column: prompt
+  target_column: destination
+  query: ${..filters.${..filter_key}}

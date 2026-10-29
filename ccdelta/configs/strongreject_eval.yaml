@@ -1,0 +1,29 @@
+# Standalone StrongReject Evaluation Configuration
+# For evaluating pre-generated text results with StrongReject scoring
+
+defaults:
+  - _self_
+
+# Hydra settings
+hydra:
+  job:
+    chdir: false
+
+# System settings
+device: 'cpu'  # Can be overridden to 'cuda' or 'mps'
+batch_size: 2
+
+# Paths - can be overridden via command line
+data_dir: ${oc.env:OUTPUT_DIR,.}/data
+cache_dir: ${oc.env:OUTPUT_DIR,.}/cache
+results_dir: ${oc.env:OUTPUT_DIR,.}/results
+
+#################################
+# StrongReject Evaluation Settings (top-level for direct extraction)
+#################################
+# Path to the data file to evaluate (using tiny sample dataset)
+data_path: ${data_dir}/tiny/sample_steered_data.json
+prompt_column: prompt
+response_column: steered_text  # Column containing generated text to evaluate
+num_sentences: null  # Process all rows (null) or specify a number
+evaluator: fine_tuned  # StrongReject evaluator type: "fine_tuned" or "rubric"

@@ -1,0 +1,22 @@
+model_path: google/gemma-2-2b-it
+dtype: ${dtype:torch.float32}
+default_batch_size: 16
+learning_batch_size: 32
+generate_batch_size: 32
+eval_batch_size: 2
+module_names: ${.default_module_names.res_14}
+
+
+default_module_names:
+  mlp_modules:
+    - "model.layers.*.mlp.up_proj"
+    - "model.layers.*.mlp.down_proj"
+    - "model.layers.*.mlp.gate_proj"
+  layernorm: ['.+layernorm']
+  post_layernorm: [".*post_attention_layernorm", ".*post_feedforward_layernorm"]
+  middle: ['model.layers.13.post_attention_layernorm', 'model.layers.13.post_feedforward_layernorm']
+  res_12: ['model.layers.12']
+  res_13: ['model.layers.13']
+  res_14: ['model.layers.14']
+  fast: ['model.layers.0.mlp.down_proj']
+  default: ${.post_layernorm}

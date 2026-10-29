@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "ml-ccdelta"
+url: https://github.com/apple-aiml-research/ml-ccdelta
+authors:
+  - family-names: Assogba
+    given-names: Yannick
+  - family-names: Cortellazzi
+    given-names: Jacopo
+  - family-names: Abad
+    given-names: Javier
+  - family-names: Rodriguez
+    given-names: Pau
+  - family-names: Suau
+    given-names: Xavier
+  - family-names: Blaas
+    given-names: Arno
+preferred-citation:
+  message: "Please consider citing our paper if you find this work useful in your research."
+  type: article
+  authors:
+    - family-names: Assogba
+      given-names: Yannick
+    - family-names: Cortellazzi
+      given-names: Jacopo
+    - family-names: Abad
+      given-names: Javier
+    - family-names: Rodriguez
+      given-names: Pau
+    - family-names: Suau
+      given-names: Xavier
+    - family-names: Blaas
+      given-names: Arno
+  title: "Sparse Autoencoders are Capable LLM Jailbreak Mitigators"
+  year: 2026
+  url: https://arxiv.org/abs/2602.12418

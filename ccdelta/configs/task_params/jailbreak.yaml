@@ -1,0 +1,48 @@
+model_task: "text-generation"
+dataset: "tabular-paired"
+# Note: src_subsets and dst_subsets not used for paired data but kept for compatibility
+src_subsets: []  
+dst_subsets: []
+default_evaluation: []
+
+train_split_pct: 0.5
+
+# all your queries here
+filters:
+  all: 'index==index'  # no-op  
+  wrapper: 'jailbreak in ["aim", "evil_confidant", "wikipedia_with_title", "dev_mode_v2", "dev_mode_with_rant"]'
+  rewriter: 'jailbreak in ["pap_authority_endorsement", "pap_evidence_based_persuasion", "pap_expert_endorsement", "pap_logical_appeal", "pap_misrepresentation"]'
+  # Individual jailbreaks
+  aim: 'jailbreak=="aim"'
+  evil_confidant: 'jailbreak=="evil_confidant"'
+  dev_mode_v2: 'jailbreak=="dev_mode_v2"'
+  dev_mode_with_rant: 'jailbreak=="dev_mode_with_rant"'
+  few_shot_json: 'jailbreak=="few_shot_json"'
+  wikipedia_with_title: 'jailbreak=="wikipedia_with_title"'
+  # Leave-one-out filters
+  wrapper_exclude_aim: 'jailbreak in ["evil_confidant", "wikipedia_with_title", "dev_mode_v2", "dev_mode_with_rant", "few_shot_json"]'
+  wrapper_exclude_evil_confidant: 'jailbreak in ["aim", "wikipedia_with_title", "dev_mode_v2", "dev_mode_with_rant", "few_shot_json"]'
+  wrapper_exclude_wikipedia_with_title: 'jailbreak in ["aim", "evil_confidant", "dev_mode_v2", "dev_mode_with_rant", "few_shot_json"]'
+  wrapper_exclude_dev_mode_v2: 'jailbreak in ["aim", "evil_confidant", "wikipedia_with_title", "dev_mode_with_rant", "few_shot_json"]'
+  wrapper_exclude_dev_mode_with_rant: 'jailbreak in ["aim", "evil_confidant", "wikipedia_with_title", "dev_mode_v2", "few_shot_json"]'
+  wrapper_exclude_few_shot_json: 'jailbreak in ["aim", "evil_confidant", "wikipedia_with_title", "dev_mode_v2", "dev_mode_with_rant"]'
+
+# choose which filter to use
+filter_key: all
+
+learning_dataset:
+  file_path:
+    - "data/jailbroken/0.5/strongreject_train.jailbroken.parquet"
+    - "data/jailbroken/0.5/advbench_train.jailbroken.parquet"
+  source_column: "jailbroken_prompt"    # Undesired jailbreaking behavior
+  target_column: "forbidden_prompt"     # Desired refusal behavior
+  query: ${..filters.${..filter_key}}
+
+eval_dataset:
+  file_path:
+    - "data/jailbroken/0.5/strongreject_test.jailbroken.parquet"
+    - "data/jailbroken/0.5/advbench_test.jailbroken.parquet"
+    - "data/jailbroken/0.5/strongreject_test.jailbroken_none.parquet"
+    - "data/jailbroken/0.5/advbench_test.jailbroken_none.parquet"
+  source_column: "jailbroken_prompt"    # Undesired jailbreaking behavior
+  target_column: "forbidden_prompt"     # Desired refusal behavior

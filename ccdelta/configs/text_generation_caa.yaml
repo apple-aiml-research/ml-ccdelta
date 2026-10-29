@@ -1,0 +1,132 @@
+# For licensing see accompanying LICENSE file.
+# Copyright (C) 2025 Apple Inc. All Rights Reserved.
+
+# Dense (CAA) Intervention Pipeline for Jailbreak Data
+# Configuration for jailbreak data interventions using contrastive activation addition
+
+defaults:
+  ####################
+  #   Intervention   #
+  ####################
+  - intervention_params: caa
+  ####################
+  # Text generation  #
+  ####################
+  # Tasks
+  - task_params: jailbreak
+  # Models, configs found in configs/models/[model].yaml
+  - model: gemma-2-2b-it
+  # Shared evaluation configs
+  - evaluations
+  # MUST come at end
+  - _self_
+
+
+task_params:
+  filter_key: wrapper
+  dataset: "tabular_to_json"
+  src_subsets: ["jailbroken_prompt"]  
+  dst_subsets: ["forbidden_prompt"]
+
+
+# Hydra settings
+hydra:
+  job:
+    chdir: false
+
+# Data and model loading paths
+data_dir: ${oc.env:OUTPUT_DIR,.}/data
+cache_dir: ${oc.env:OUTPUT_DIR,.}/cache
+results_dir: ${oc.env:OUTPUT_DIR,.}/results
+
+# Some globals
+device: 'cuda'
+fast: true  # Set to false to run on the full dataset
+seed: 42
+use_chat_template: true
+# By default we let model config specify batch_size
+batch_size: ${model.default_batch_size}
+generate_batch_size: ${model.generate_batch_size}
+eval_batch_size: ${model.eval_batch_size}
+
+# Decides which scripts to run
+compute_responses: true
+compute_interventions: true
+
+# evaluation: ["text-generation", "strongreject_finetuned", "strongreject_rubric", "fluency", "ifeval", "mmlu"]
+evaluation: ["text-generation", "strongreject_finetuned"]
+ 
+
+# Response Generation Settings
+responses:
+  # Batch size for response generation.
+  batch_size: ${batch_size}
+  # Use balanced data sampling during response generation.
+  balanced_data: true
+  # List of extra fields to save with responses.
+  save_fields: [] 
+  # Shuffle the data before generating responses.
+  shuffle: true
+  # Device to use for response generation (e.g., "cpu", "cuda").
+  device: "${device}"
+  # Data type to use for model computations (default is torch.float32).
+  dtype: ${model.dtype}
+  # Maximum number of batches to process during response generation (null means load all data).
+  max_batches: null
+  # Number of worker processes to use for data loading.
+  num_workers: 1
+  # Random seed for reproducibility.
+  seed: ${seed}
+  # Whether to resume from a previous checkpoint.
+  resume: true
+  # Directory containing the input data.
+  data_dir: ${data_dir}
+  # Directory for caching intermediate results.
+  cache_dir: ${cache_dir}
+  # Tag used to identify generated responses (e.g., "responses").
+  tag: "responses"
+  # Params for response-saving hooks
+  intervention_params:
+    # Name of the intervention to apply.
+    name: "postprocess_and_save"
+    # Pooling operation to use for aggregating responses (e.g., "mean", "max").
+    pooling_op: ${interventions.intervention_params.pooling_op}
+    # Parameters specific to the response-saving hook.
+    hook_params:
+      # Whether to raise an exception when target module has been reached and responses have been saved.
+      raise_exception: false
+  # Task-specific parameters (see configs/task_params).
+  task_params: ${task_params}
+  # Model architecture and hyperparameters.
+  model_params: ${model} 
+  use_chat_template: ${use_chat_template}
+
+
+# Intervention settings.
+interventions:
+  # Batch size when loading cached responses.
+  batch_size: 2
+  # Maximum number of batches to process (null means load all data).
+  max_batches: null
+  # Shuffle the data before learning interventions.
+  shuffle: true
+  
+  # Data type to use when learning an intervention (default is torch.float32).
+  dtype: ${model.dtype}
+
+  # Number of worker processes for data loading.
+  num_workers: 1
+  # Random seed for reproducibility.
+  seed: ${seed}
+  # Whether to resume from a previous checkpoint (typically false for interventions).
+  resume: false
+  # Directory for caching intermediate results.
+  cache_dir: ${cache_dir}
+  # Tag used to identify intervention results (e.g., "interventions").
+  tag: "interventions"
+  # Task-specific parameters (see configs/task_params).
+  task_params: ${task_params}
+  # Parameters for the specific intervention being applied (see configs/intervention_params).
+  intervention_params: ${intervention_params}
+  # Model architecture and hyperparameters.
+  model_params: ${model} 

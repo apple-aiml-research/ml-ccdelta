@@ -1,0 +1,37 @@
+# Model settings
+model_path: meta-llama/Llama-3.1-8B-Instruct
+module_names: [model.layers.17]
+
+default_batch_size: 8
+learning_batch_size: 8
+generate_batch_size: 18
+eval_batch_size: 4
+# dtype: ${dtype:torch.float32}
+dtype: ${dtype:torch.bfloat16}
+
+
+sae_configs:
+  "model.layers.16":
+    use_sae_lens: true
+    release: "llama_scope_lxr_32x"
+    sae_id: "l16r_32x"
+    model: "Llama-3.1-8B-Instruct"
+    layer: 16
+    layer_offset: 0
+    url: null
+  "model.layers.17":
+    use_sae_lens: true
+    release: "llama_scope_lxr_32x"
+    sae_id: "l17r_32x"
+    model: "Llama-3.1-8B-Instruct"
+    layer: 17
+    layer_offset: 0
+    url: null
+  "model.layers.18":
+    use_sae_lens: true
+    release: "llama_scope_lxr_32x"
+    sae_id: "l18r_32x"
+    model: "Llama-3.1-8B-Instruct"
+    layer: 18
+    layer_offset: 0
+    url: null

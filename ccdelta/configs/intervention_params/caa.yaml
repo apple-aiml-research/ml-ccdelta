@@ -1,0 +1,13 @@
+name: caa
+experiment_id: ${text_generation.experiment_id} # move the functionality for this to live fully in text-generation
+learn_intervention: true
+pooling_op: mean
+incremental: incr
+state_path: null
+
+hook_params:
+  intervention_position: all
+  strength: 1.0
+  skip_special_token_filtering: true
+  device: ${device}
+  dtype: ${dtype:torch.float32}

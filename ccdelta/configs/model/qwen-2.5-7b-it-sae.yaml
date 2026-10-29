@@ -1,0 +1,37 @@
+# Model settings
+model_path: Qwen/Qwen2.5-7B-Instruct
+module_names: ["model.layers.19"]
+
+# SAE-optimized settings
+default_batch_size: 8
+learning_batch_size: 4
+generate_batch_size: 8
+eval_batch_size: 2
+dtype: ${dtype:torch.bfloat16}
+
+# SAE configuration (per-module mapping format)
+sae_configs:
+  "model.layers.19":
+    use_sae_lens: true
+    release: "qwen2.5-7b-instruct-andyrdt"
+    sae_id: "resid_post_layer_19_trainer_1"
+    model: "Qwen/Qwen2.5-7B-Instruct"
+    layer: 19
+    layer_offset: 0
+    url: null
+  "model.layers.15":
+      use_sae_lens: true
+      release: "qwen2.5-7b-instruct-andyrdt"
+      sae_id: "resid_post_layer_15_trainer_1"
+      model: "Qwen/Qwen2.5-7B-Instruct"
+      layer: 15
+      layer_offset: 0
+      url: null
+  "model.layers.11":
+      use_sae_lens: true
+      release: "qwen2.5-7b-instruct-andyrdt"
+      sae_id: "resid_post_layer_11_trainer_1"
+      model: "Qwen/Qwen2.5-7B-Instruct"
+      layer: 11
+      layer_offset: 0
+      url: null

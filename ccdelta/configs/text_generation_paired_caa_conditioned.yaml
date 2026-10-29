@@ -1,0 +1,135 @@
+# For licensing see accompanying LICENSE file.
+# Copyright (C) 2025 Apple Inc. All Rights Reserved.
+
+# Context-Conditioned CAA Intervention Pipeline for Jailbreak Data
+# Configuration for paired jailbreak data interventions using context-conditioned CAA
+# This applies spatial conditioning (substring matching) to dense activations
+
+defaults:
+  ####################
+  # Text generation  #
+  ####################
+  # Tasks
+  - task_params: jailbreak
+  # Models
+  - model: gemma-2-2b-it
+  # Shared evaluation configs
+  - evaluations
+  # MUST come at end
+  - _self_
+
+
+task_params:
+  filter_key: wrapper
+  # Use paired dataset format for context conditioning
+  dataset: "tabular-paired"
+
+# Hydra settings
+hydra:
+  job:
+    chdir: false
+
+# Data and model loading paths
+data_dir: ${oc.env:OUTPUT_DIR,.}/data
+cache_dir: ${oc.env:OUTPUT_DIR,.}/cache
+results_dir: ${oc.env:OUTPUT_DIR,.}/results
+
+# Globals
+device: 'cuda'
+fast: false
+seed: 42
+use_chat_template: true
+batch_size: ${model.default_batch_size}
+learning_batch_size: ${model.learning_batch_size}
+generate_batch_size: ${model.generate_batch_size}
+eval_batch_size: ${model.eval_batch_size}
+
+# Pipeline control
+compute_responses: true
+compute_interventions: true
+# evaluation: ["text-generation", "strongreject_finetuned", "strongreject_rubric", "fluency", "ifeval", "mmlu"]
+evaluation: ["text-generation", "strongreject_finetuned"]
+
+
+#################################
+# Intervention Parameters
+#################################
+intervention_params:
+  name: caa_context_conditioned
+  experiment_id: ${text_generation.experiment_id}
+  learn_intervention: true
+  pooling_op: all  # Keep per-token features for spatial conditioning
+  incremental: atonce
+  state_path: null
+
+  hook_params:
+    intervention_position: all
+    strength: 1.0
+    feature_diffing_method: source_conditioned  # Strict substring matching
+    skip_special_token_filtering: false  # Enable extended special token masking
+    device: ${device}
+    dtype: ${dtype:torch.float32}
+
+
+#################################
+# Response Generation Settings
+#################################
+responses:
+  # Data handling
+  batch_size: ${learning_batch_size}
+  shuffle: true
+  max_batches: null
+  save_fields: []
+  use_chat_template: ${use_chat_template}
+
+  # System settings
+  device: "${device}"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: true
+
+  # Paths
+  data_dir: ${data_dir}
+  cache_dir: ${cache_dir}
+  tag: "responses"
+
+  # Response collection hook for paired dense activations
+  intervention_params:
+    name: "paired_dense_responses"  # Uses PairedResponsesHook with IdentityHook
+    pooling_op: all  # Keep per-token features for conditioning
+    hook_params:
+      model_config: ${model}
+      device: ${device}
+      dtype: ${model.dtype}
+      raise_exception: false
+
+  # Task and model params
+  task_params: ${task_params}
+  model_params: ${model}
+
+
+#################################
+# Intervention Learning Settings
+#################################
+interventions:
+  # Data handling
+  batch_size: ${learning_batch_size}
+  max_batches: null
+  shuffle: true
+
+  # System settings
+  device: "cpu"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: false
+
+  # Paths
+  cache_dir: ${cache_dir}
+  tag: "interventions"
+
+  # Configuration references
+  task_params: ${task_params}
+  intervention_params: ${intervention_params}
+  model_params: ${model}

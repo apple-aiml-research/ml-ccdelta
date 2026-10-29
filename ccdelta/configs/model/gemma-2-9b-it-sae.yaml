@@ -1,0 +1,47 @@
+# Gemma 2-9B with SAE configuration
+
+# Model settings
+model_path: google/gemma-2-9b-it
+module_names: ["model.layers.20"]
+
+# SAE-optimized settings
+default_batch_size: 8
+learning_batch_size: 8
+generate_batch_size: 8
+eval_batch_size: 2
+dtype: ${dtype:torch.bfloat16}
+
+# SAE configuration (per-module mapping format)
+sae_configs:
+  "model.layers.19":
+      use_sae_lens: true
+      release: "gemma-scope-9b-pt-res-canonical"
+      sae_id: "layer_19/width_131k/canonical"
+      model: "google/gemma-2-9b-it"
+      layer: 19
+      layer_offset: 0
+      url: null
+  "model.layers.20":
+    use_sae_lens: true
+    release: "gemma-scope-9b-it-res"
+    sae_id: "layer_20/width_131k/average_l0_153"
+    model: "google/gemma-2-9b-it"
+    layer: 20
+    layer_offset: 0
+    url: null
+  # "model.layers.20":
+  #   use_sae_lens: true
+  #   release: "gemma-scope-9b-pt-res-canonical"
+  #   sae_id: "layer_20/width_131k/canonical"
+  #   model: "google/gemma-2-9b-it"
+  #   layer: 20
+  #   layer_offset: 0
+  #   url: null
+  "model.layers.21":
+    use_sae_lens: true
+    release: "gemma-scope-9b-pt-res-canonical"
+    sae_id: "layer_21/width_131k/canonical"
+    model: "google/gemma-2-9b-it"
+    layer: 21
+    layer_offset: 0
+    url: null

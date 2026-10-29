@@ -1,0 +1,10 @@
+[
+  {
+    "prompt": "Hello world",
+    "steered_text": "Hello! How can I help you today?"
+  },
+  {
+    "prompt": "Tell me about giraffes",
+    "steered_text": "Giraffes are tall mammals."
+  }
+]

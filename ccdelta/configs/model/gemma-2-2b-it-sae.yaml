@@ -1,0 +1,55 @@
+  # Gemma 2-2B with SAE configuration
+
+# Model settings
+model_path: google/gemma-2-2b-it
+module_names: ["model.layers.14"]
+
+# SAE-optimized settings
+default_batch_size: 16
+learning_batch_size: 40
+generate_batch_size: 48
+eval_batch_size: 10
+dtype: ${dtype:torch.bfloat16}
+
+# SAE configuration (per-module mapping format)
+sae_configs:
+  "model.layers.12":
+      use_sae_lens: true
+      release: "gemma-scope-2b-pt-res-canonical"
+      sae_id: "layer_12/width_65k/canonical"
+      model: "google/gemma-2-2b-it"
+      layer: 12
+      layer_offset: 0
+      url: null
+  "model.layers.13":
+    use_sae_lens: true
+    release: "gemma-scope-2b-pt-res-canonical"
+    sae_id: "layer_13/width_65k/canonical"
+    model: "google/gemma-2-2b-it"
+    layer: 13
+    layer_offset: 0
+    url: null
+  "model.layers.14":
+      use_sae_lens: true
+      release: "gemma-scope-2b-pt-res-canonical"
+      sae_id: "layer_14/width_65k/canonical"
+      model: "google/gemma-2-2b-it"
+      layer: 14
+      layer_offset: 0
+      url: null
+  "model.layers.11":
+    use_sae_lens: true
+    release: "gemma-scope-2b-pt-res-canonical"
+    sae_id: "layer_11/width_65k/canonical"
+    model: "google/gemma-2-2b-it"
+    layer: 11
+    layer_offset: 0
+    url: null
+  "model.layers.15":
+    use_sae_lens: true
+    release: "gemma-scope-2b-pt-res-canonical"
+    sae_id: "layer_15/width_65k/canonical"
+    model: "google/gemma-2-2b-it"
+    layer: 15
+    layer_offset: 0
+    url: null

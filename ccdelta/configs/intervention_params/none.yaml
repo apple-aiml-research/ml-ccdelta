@@ -1,0 +1,13 @@
+# No-hooks baseline intervention - completely bypasses hook system
+# This provides true baseline evaluation without any hook registration
+
+name: none                  # Hook name (required by learn_intervention.py)
+executor: no_hooks          # Uses the no_hooks executor
+learn_intervention: false   # No learning required for baseline
+state_path: null
+
+# in case using idendity hook with some other executor
+hook_params:
+  intervention_position: all
+  device: ${device}
+  dtype: ${dtype:torch.float32}

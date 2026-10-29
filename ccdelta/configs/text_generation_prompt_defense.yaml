@@ -1,0 +1,57 @@
+# Prompt Defense Text Generation Configuration
+# Generates text with prompt defense wrappers applied to OR-Bench data
+
+defaults:
+  # Load model configuration
+  - model: gemma-2-2b-it-sae
+  # Load task/data configuration
+  - task_params: jailbreak
+  # Use no intervention for baseline
+  - intervention_params: none
+  # Shared evaluation configs
+  - evaluations
+  # MUST come at end
+  - _self_
+
+task_params:
+  dataset: "tabular-paired"
+  src_subsets: []
+  dst_subsets: []
+  default_evaluation: []
+  eval_dataset:
+    file_path:
+      - "data/or_bench/chunks_seed42_prompt_defense/orbench_10pct_seed42_chunk_0.parquet"
+      - "data/or_bench/chunks_seed42_prompt_defense/orbench_10pct_seed42_chunk_1.parquet"
+    source_column: "jailbroken_prompt"
+    target_column: "forbidden_prompt"
+
+# Hydra settings
+hydra:
+  job:
+    chdir: false
+
+# System settings
+device: 'cuda'  # Can be overridden to 'cpu' or 'mps'
+seed: 42
+fast: false
+batch_size: ${model.default_batch_size}
+generate_batch_size: ${model.generate_batch_size}
+eval_batch_size: ${model.eval_batch_size}
+
+#################################
+# Pipeline Control
+#################################
+# Data and model loading paths
+data_dir: ${oc.env:OUTPUT_DIR,.}/data
+cache_dir: ${oc.env:OUTPUT_DIR,.}/cache
+results_dir: ${oc.env:OUTPUT_DIR,.}/results
+
+# Skip intervention phases for baseline
+compute_responses: false
+compute_interventions: false
+# evaluation: ["text-generation", "strongreject_finetuned", "strongreject_rubric", "fluency", "ifeval", "mmlu"]
+evaluation: ["text-generation", "strongreject_finetuned"]
+
+# Whether to use defense prompts during evaluation
+use_defense: true
+defense_payload_last: true

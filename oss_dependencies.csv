@@ -1,0 +1,21 @@
+OSS Project Name,Version,License Name,Binary or Source,Project URL,License URL,Notes
+torch,2.12.0,BSD-3-Clause,Source,https://pytorch.org,https://github.com/pytorch/pytorch/blob/main/LICENSE,Direct dependency in pyproject.toml
+datasets,5.0.0,Apache-2.0,Source,https://github.com/huggingface/datasets,https://github.com/huggingface/datasets/blob/main/LICENSE,Direct dependency in pyproject.toml
+pandas,3.0.3,BSD-3-Clause,Source,https://pandas.pydata.org,https://github.com/pandas-dev/pandas/blob/main/LICENSE,Direct dependency in pyproject.toml
+numpy,1.26.4,BSD-3-Clause,Source,https://numpy.org,https://github.com/numpy/numpy/blob/main/LICENSE.txt,"Direct dependency in pyproject.toml, pinned <2 for hydra-core compatibility"
+pytest,9.0.3,MIT,Source,https://docs.pytest.org/en/latest/,https://github.com/pytest-dev/pytest/blob/main/LICENSE,Direct dependency in pyproject.toml (test framework)
+hydra-core,1.3.2,MIT,Source,https://github.com/facebookresearch/hydra,https://github.com/facebookresearch/hydra/blob/main/LICENSE,Direct dependency in pyproject.toml
+safetensors,0.7.0,Apache-2.0,Source,https://github.com/huggingface/safetensors,https://github.com/huggingface/safetensors/blob/main/LICENSE,Direct dependency in pyproject.toml
+statsmodels,0.14.6,BSD-3-Clause,Source,https://www.statsmodels.org/,https://github.com/statsmodels/statsmodels/blob/main/LICENSE.txt,Direct dependency in pyproject.toml
+openai,2.41.0,Apache-2.0,Source,https://github.com/openai/openai-python,https://github.com/openai/openai-python/blob/main/LICENSE,Direct dependency in pyproject.toml
+pydantic,2.13.4,MIT,Source,https://github.com/pydantic/pydantic,https://github.com/pydantic/pydantic/blob/main/LICENSE,Direct dependency in pyproject.toml
+click,8.4.1,BSD-3-Clause,Source,https://click.palletsprojects.com/,https://github.com/pallets/click/blob/main/LICENSE.txt,Direct dependency in pyproject.toml
+ruff,0.15.22,MIT,Source,https://docs.astral.sh/ruff/,https://github.com/astral-sh/ruff/blob/main/LICENSE,Direct dependency in pyproject.toml (linter/formatter)
+types-tqdm,4.69.0.20260720,Apache-2.0,Source,https://github.com/python/typeshed,https://github.com/python/typeshed/blob/main/LICENSE,Direct dependency in pyproject.toml (type stubs for tqdm)
+altair,6.2.2,BSD-3-Clause,Source,https://altair-viz.github.io,https://github.com/vega/altair/blob/main/LICENSE,Direct dependency in pyproject.toml (used by analysis notebooks)
+jupyterlab,4.6.2,BSD-3-Clause,Source,https://jupyter.org,https://github.com/jupyterlab/jupyterlab/blob/main/LICENSE,Direct dependency in pyproject.toml (used to run analysis notebooks)
+transformers,4.57.6,Apache-2.0,Source,https://github.com/huggingface/transformers,https://github.com/huggingface/transformers/blob/main/LICENSE,"Optional dependency documented in README (pinned version, installed separately for reproducibility)"
+strong_reject,main (git commit 7a551d5b440ec7b75d4f6f5bb7c1719965b76b47),MIT,Source,https://github.com/dsbowen/strong_reject,https://github.com/dsbowen/strong_reject/blob/main/LICENSE,"Optional dependency documented in README, installed via git URL (@main branch, no tagged PyPI release)"
+sae-lens,6.30.0,MIT,Source,https://github.com/decoderesearch/SAELens,https://github.com/decoderesearch/SAELens/blob/main/LICENSE,"Optional dependency documented in README (pinned version, installed separately)"
+lm-eval,0.4.12,MIT,Source,https://github.com/EleutherAI/lm-evaluation-harness,https://github.com/EleutherAI/lm-evaluation-harness/blob/main/LICENSE.md,"Optional dependency documented in README (installed as lm-eval[ifeval,toxigen], version unpinned; 0.4.12 was latest at time of review)"
+semantic-regex,0.1.0,Apple Sample Code License,Source,https://github.com/apple/ml-semantic-regex,https://github.com/apple/ml-semantic-regex/blob/main/LICENSE,"Optional dependency documented in README. Note: this is Apple's own package (ml-semantic-regex), not third-party OSS -- may not need to go through the third-party OSS use-request process."

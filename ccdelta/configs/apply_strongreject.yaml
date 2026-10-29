@@ -1,0 +1,45 @@
+# @package _global_
+
+defaults:
+  - _self_
+
+# Base directory containing dataset splits
+data_dir: "data/forbidden_prompts"
+
+# Train split percentage folder to load data from (e.g., "0.5")
+train_split_pct: "0.5"
+
+# Datasets to process (both by default)
+datasets:
+  - "advbench"
+  - "strongreject"
+
+# Splits to process (both by default)
+splits:
+  - "train"
+  - "test"
+
+# Jailbreak methods to apply (template-based, no API key needed)
+jailbreaks:
+  - "aim"
+  - "evil_confidant"
+  # Additional wrapper jailbreaks (also no API key):
+  # - "few_shot_json"
+  # - "dev_mode_v2"
+  # - "dev_mode_with_rant"
+  # - "wikipedia_with_title"
+  # Rewriter jailbreaks (require OPENAI_API_KEY):
+  # - "auto_payload_splitting"
+  # - "pap_evidence_based_persuasion"
+  # - "pap_expert_endorsement"
+  # - "pap_misrepresentation"
+  # - "pap_authority_endorsement"
+  # - "pap_logical_appeal"
+
+attack_models: []
+ # Only needed for rewriter jailbreaks above
+ # - "openai/gpt-3.5-turbo"
+ # - "openai/gpt-4o-mini"
+
+# Output directory (will create subdirectory for train_split_pct)
+output_dir: "data/jailbroken"

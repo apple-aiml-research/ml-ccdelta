@@ -1,0 +1,160 @@
+# Paired SAE Feature Space Intervention Pipeline
+# Configuration for paired tabular data interventions using SAE
+
+defaults:
+  # Load model configuration (now includes SAE config)
+  - model: gemma-2-2b-it-sae
+  # Load task/data configuration
+  - task_params: jailbreak
+  # Shared evaluation configs
+  - evaluations
+  # MUST come at end
+  - _self_
+
+task_params:
+  filter_key: wrapper
+
+# NOTE: sae_config is now resolved automatically from model_config in hook_params
+# No need to extract ${model.sae} here - supports both single SAE and multi-layer sae_configs
+
+# Hydra settings
+hydra:
+  job:
+    chdir: false
+
+device: 'cuda'
+seed: 42
+fast: true  # Set to false to run on the full dataset
+batch_size: ${model.default_batch_size}
+learning_batch_size: ${model.learning_batch_size}
+generate_batch_size: ${model.generate_batch_size}
+eval_batch_size: ${model.eval_batch_size}
+
+
+#################################
+# Pipeline Control
+#################################
+# Data and model loading paths
+data_dir: ${oc.env:OUTPUT_DIR,.}/data
+cache_dir: ./cache
+results_dir: ${oc.env:OUTPUT_DIR,.}/results
+
+compute_responses: true
+compute_interventions: true
+# evaluation: ["text-generation", "strongreject_finetuned", "strongreject_rubric", "fluency", "ifeval", "mmlu"]
+evaluation: ["text-generation", "strongreject_finetuned"]
+
+#################################
+# SAE Intervention Configuration
+#################################
+# Shared configuration for intervention learning and application phases
+intervention_params:
+  name: sae_feature_space  # Use SAE feature space steering hook
+  experiment_id: ${text_generation.experiment_id}
+  learn_intervention: true
+  incremental: "incr"
+  pooling_op: all
+  # Will be set by pipeline when interventions are learned but must be present
+  state_path: null
+  hook_params:
+    model_config: ${model}  # Automatically resolves SAE config per module
+    error_coefficient: 1.0
+    normalization_mode: null
+    intervention_position: all
+    device: ${device}
+    dtype: ${model.dtype}
+    steering_multiplier: 1.0
+    # Special token filtering: set to true to steer special tokens (for sanity checking)
+    skip_special_token_filtering: false
+    # Generation control: 0 = unlimited, N = steer prompt + N generated tokens
+    steer_n_new_tokens: 0
+    # Decay schedule: "none" (no decay), "linear" (linear decay to 0), "cosine" (smooth cosine decay)
+    decay_schedule: "none"
+    use_chat_template_for_responses: true
+    # Feature selection parameters for select_steering_features()
+    feature_diffing_method: "source_conditioned"
+    target_metric: "activation_avg"
+    threshold_percentile: 10
+    min_observations_percent: 20.0
+    min_observations_absolute: 5
+    max_observations_percent: 100
+    p_value_threshold: 0.01
+    # Number of top features to select for steering
+    num_features: 50
+    ranking_method: "effect_size"  # Method for ranking features: "significance" or "effect_size"
+    feature_selection_method: "statistical"
+    # Balance positive and negative features: if true, selects num_features//2 from each class
+    balance_pos_and_neg: false
+    # Compiled compare mode: precompute dense vector, run both paths, record equivalence error
+    compiled_compare_mode: false
+
+
+# Response collection hook configuration (simplified - redundant fields removed)
+response_collection_hook:
+  name: "paired_sae_responses"
+  pooling_op: ${intervention_params.pooling_op}
+  hook_params:
+    model_config: ${model}  # Automatically resolves SAE config per module
+    device: ${intervention_params.hook_params.device}
+    dtype: ${model.dtype}
+    return_sparse: true
+    # Whether to raise an exception when target module has been reached and responses have been saved.
+    # Set to true for incremental training speedup.
+    raise_exception: false
+
+#################################
+# Response Generation Settings
+#################################
+responses:
+  # Data handling
+  batch_size: ${learning_batch_size}
+  shuffle: true
+  max_batches: null
+  save_fields: []
+  use_chat_template: true
+  
+  # System settings
+  device: "${device}"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: true
+  
+  # Paths and organization
+  data_dir: ${data_dir}
+  cache_dir: ${cache_dir}
+  tag: "responses"
+  
+  # Task-specific configuration for paired data - now loaded from defaults
+  task_params: ${task_params}
+  
+  # Configuration references - response collection specific
+  intervention_params: ${response_collection_hook}
+      
+  model_params: ${model}
+
+#################################
+# Intervention Learning Settings  
+#################################
+interventions:
+  # Data handling
+  batch_size: ${learning_batch_size}
+  max_batches: null
+  shuffle: true
+  load_fields: []
+  
+  # System settings
+  device: "cpu"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: false
+  
+  # Paths and organization
+  cache_dir: ${cache_dir}
+  tag: "interventions"
+  
+  # Configuration references
+  task_params: ${responses.task_params} 
+  intervention_params: ${intervention_params}
+  model_params: ${model}

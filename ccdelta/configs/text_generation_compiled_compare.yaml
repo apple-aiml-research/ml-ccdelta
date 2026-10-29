@@ -1,0 +1,142 @@
+# Compiled Dense Mode Equivalence Experiment
+#
+# Runs the full SAE steering pipeline with compiled_compare_mode=true,
+# which executes both the compiled dense path (h + decay * V_dense) and
+# the naive SAE roundtrip path, recording equivalence error stats.
+#
+# Output: compilation_error_stats.json in results_dir/generate_with_hooks/
+#
+# Usage:
+#   python -m ccdelta.scripts.pipeline --config-name text_generation_compiled_compare \
+#     device=cpu model.dtype='${dtype:torch.float32}'
+#
+# Override model:
+#   model=gemma-2-9b-it-sae model.module_names='[model.layers.20]'
+
+defaults:
+  - model: gemma-2-2b-it-sae
+  - task_params: jailbreak
+  - evaluations
+  - _self_
+
+task_params:
+  filter_key: wrapper
+
+hydra:
+  job:
+    chdir: false
+
+device: 'cuda'
+seed: 42
+fast: false
+batch_size: ${model.default_batch_size}
+learning_batch_size: ${model.learning_batch_size}
+generate_batch_size: 1
+eval_batch_size: ${model.eval_batch_size}
+
+#################################
+# Pipeline Control
+#################################
+data_dir: ${oc.env:OUTPUT_DIR,.}/data
+cache_dir: ./cache
+results_dir: ${oc.env:OUTPUT_DIR,.}/results
+
+compute_responses: true
+compute_interventions: true
+# Only text-generation — skip expensive evals for equivalence testing
+# evaluation: ["text-generation", "strongreject_finetuned", "strongreject_rubric", "fluency"]
+evaluation: ["text-generation", "strongreject_finetuned"]
+
+# Limit generation to a small number of prompts for quick equivalence checks
+# Override on CLI with text_generation.num_sentences=N for more
+text_generation:
+  num_sentences: 5
+
+#################################
+# SAE Intervention Configuration
+#################################
+intervention_params:
+  name: sae_feature_space
+  experiment_id: ${text_generation.experiment_id}
+  learn_intervention: true
+  incremental: "incr"
+  pooling_op: all
+  state_path: null
+  hook_params:
+    model_config: ${model}
+    # --- Compiled compare mode guards (all must hold for compilation) ---
+    error_coefficient: 1.0
+    normalization_mode: null
+    compiled_compare_mode: true
+    # ---
+    intervention_position: all
+    device: ${device}
+    # dtype: '${dtype:torch.float32}'  # float32 for equivalence analysis
+    dtype: '${dtype:torch.bfloat16}'
+    steering_multiplier: 1.0
+    skip_special_token_filtering: false
+    steer_n_new_tokens: 0
+    decay_schedule: "none"
+    use_chat_template_for_responses: true
+    # Feature selection — use same defaults as main experiments
+    feature_diffing_method: "source_conditioned"
+    target_metric: "activation_avg"
+    threshold_percentile: 10
+    min_observations_percent: 20.0
+    min_observations_absolute: 5
+    max_observations_percent: 100
+    p_value_threshold: 0.01
+    num_features: 50
+    ranking_method: "effect_size"
+    feature_selection_method: "statistical"
+    balance_pos_and_neg: false
+
+response_collection_hook:
+  name: "paired_sae_responses"
+  pooling_op: ${intervention_params.pooling_op}
+  hook_params:
+    model_config: ${model}
+    device: ${intervention_params.hook_params.device}
+    dtype: ${model.dtype}
+    return_sparse: true
+    raise_exception: false
+
+#################################
+# Response Generation Settings
+#################################
+responses:
+  batch_size: ${learning_batch_size}
+  shuffle: true
+  max_batches: null
+  save_fields: []
+  use_chat_template: true
+  device: "${device}"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: true
+  data_dir: ${data_dir}
+  cache_dir: ${cache_dir}
+  tag: "responses"
+  task_params: ${task_params}
+  intervention_params: ${response_collection_hook}
+  model_params: ${model}
+
+#################################
+# Intervention Learning Settings
+#################################
+interventions:
+  batch_size: ${learning_batch_size}
+  max_batches: null
+  shuffle: true
+  load_fields: []
+  device: "cpu"
+  dtype: ${model.dtype}
+  num_workers: 1
+  seed: ${seed}
+  resume: false
+  cache_dir: ${cache_dir}
+  tag: "interventions"
+  task_params: ${responses.task_params}
+  intervention_params: ${intervention_params}
+  model_params: ${model}

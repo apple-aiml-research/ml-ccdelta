@@ -1,0 +1,16 @@
+# Model settings
+model_path: Qwen/Qwen2.5-7B-Instruct
+default_batch_size: 8
+learning_batch_size: 4
+generate_batch_size: 4
+eval_batch_size: 2
+dtype: ${dtype:torch.float32}
+
+module_names: ${.default_module_names.o_proj}
+
+default_module_names:
+  res_11: ['model.layers.11']
+  res_15: ['model.layers.15']
+  res_19: ['model.layers.19']
+  o_proj: [".*o_proj:0"]
+  

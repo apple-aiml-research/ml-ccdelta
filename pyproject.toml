@@ -1,0 +1,71 @@
+# For licensing see accompanying LICENSE file.
+# Copyright (C) 2026 Apple Inc. All Rights Reserved.
+
+[project]
+name = "ccdelta"
+version = "0.0.1"
+description = "Activation steering for jailbreak mitigation."
+readme = "README.md"
+authors = [
+]
+license = { text = "Apple Sample Code License" }
+dependencies = [
+    "torch",
+    "datasets",
+    "pandas",
+    "numpy<2", # compatibility with hydra-core
+    "pytest",
+    "hydra-core",
+    "safetensors>=0.3.0",
+    "statsmodels>=0.14.5",
+    "openai>=1.97.1",
+    "pydantic>=2.11.7",
+    "click>=8.1.0",
+    "ruff>=0.12.4",
+    "types-tqdm>=4.67.0.20250516",
+    "altair>=5.5.0",
+    "jupyterlab>=4.4.5",
+    # Pinned to the versions used in the paper for reproducibility
+    "transformers==4.57.6",
+    "sae-lens==6.30.0",
+    "lm-eval[ifeval]==0.4.12",
+    "strong_reject @ git+https://github.com/dsbowen/strong_reject.git@7a551d5b440ec7b75d4f6f5bb7c1719965b76b47",
+]
+
+[project.optional-dependencies]
+interpret = ["semantic-regex>=0.1.0"]
+
+[tool.setuptools]
+packages = ["ccdelta", "notebooks"]
+
+[tool.uv]
+package = true
+override-dependencies = [
+    "numpy<2.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = [ # Adds code path to pytest
+  "."
+]
+addopts = "--capture=no"  # Don't capture stdout/stderr (default: "auto")
+markers = [
+    "integration: marks tests as integration tests (slow to run)",
+]
+
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+select = ["E", "F", "D", "PL", "UP", "NPY", "B"]
+ignore = [
+    "D203", "D213", "ANN401", "D400",
+    "PLR0913", "PLR2004", "E501"
+]
+exclude = ["third_party", ".venv", "build", "dist"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

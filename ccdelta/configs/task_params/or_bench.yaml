@@ -1,0 +1,28 @@
+model_task: "text-generation"
+dataset: "tabular-paired"
+src_subsets: []
+dst_subsets: []
+default_evaluation: []
+
+filters:
+  all: 'index==index'  # no-op  
+  wrapper: 'jailbreak in ["aim", "evil_confidant", "wikipedia_with_title", "dev_mode_v2", "dev_mode_with_rant"]'
+
+filter_key: wrapper
+
+learning_dataset:
+  file_path:
+    - "data/jailbroken/0.5/strongreject_train.jailbroken.parquet"
+    - "data/jailbroken/0.5/advbench_train.jailbroken.parquet"
+  source_column: "jailbroken_prompt"
+  target_column: "forbidden_prompt"
+  query: ${..filters.${..filter_key}}
+
+eval_dataset:
+  file_path:
+    - "data/or_bench/chunks_seed42/orbench_10pct_seed42_chunk_0.parquet"
+    - "data/or_bench/chunks_seed42/orbench_10pct_seed42_chunk_1.parquet"
+    # - "data/or_bench/chunks_seed42/orbench_10pct_seed42_chunk_2.parquet"
+    # - "data/or_bench/or_bench_hard_1k.parquet"
+  source_column: "jailbroken_prompt"
+  target_column: "forbidden_prompt"
